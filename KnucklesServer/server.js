@@ -6,6 +6,44 @@ var f = require('./f');
 app.use(bodyParser.json());
 
 var mraa = require('mraa');
+var mqtt = require('mqtt');
+
+var org = "2tqgsy";
+//var deviceIndex = (appInfo && appInfo.instance_index) ? appInfo.instance_index : 0;
+var deviceId = "784b87a13933";
+var token = "wv3V9?2qv?sR0d@Ipu";
+
+var iot_server = org + ".messaging.internetofthings.ibmcloud.com";
+var iot_port = 1883;
+var iot_username = "use-token-auth";
+var iot_password = token;
+var iot_clientid = "d:" + org + ":edison:" + deviceId
+
+console.log(iot_server, iot_clientid, iot_username, iot_password);
+var client = mqtt.createClient(1883, iot_server, { clientId: iot_clientid, username: iot_username, password: iot_password });
+var path;
+client.on('connect', function() {
+    console.log('MQTT client connected to IBM IoT Cloud.');
+    path = "iot-2/type/+/id/"+deviceId;
+    console.log("Subscribing to "+path);
+    client.subscribe(path);
+});
+
+console.log(JSON.stringify(process.env));
+//var VEHICLE_COUNT = (argv.count ? argv.count : (process.env.VEHICLE_COUNT || 1));
+//var TELEMETRY_RATE = (argv.rate ? argv.rate : (process.env.TELEMETRY_RATE || 2));
+
+// console.log("Simulating " + VEHICLE_COUNT + " vehicles");
+
+// subscribe
+var propertyTopic = "iot-2/*";
+
+// publish
+var telemetryTopic = "iot-2/*"; //evt/telemetry/fmt/json";
+
+
+
+
 
 var OUT_PIN = 3;
 var out = new mraa.Gpio(OUT_PIN);
@@ -52,6 +90,8 @@ function manageTemp(t) {
 }
 
 app.get('/status', function (req, res) {
+  client.publish(path); //"iot-2/evt/123/fmt/json",'{"helloworld":true}',false,0);
+  console.log("Publishing to client: "+path);
   res.send(getState());
 });
 
